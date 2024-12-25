@@ -1,0 +1,19 @@
+- name: Add firewall rules
+  firewalld:
+    service: "{{ item }}"
+    permanent: true
+    state: enabled
+  loop:
+    - dhcp
+    - http
+    - tftp
+
+- name: Add custom TFTP port
+  firewalld:
+    port: 69/udp
+    permanent: true
+    state: enabled
+
+- name: Reload firewall rules
+  command: firewall-cmd --reload
+

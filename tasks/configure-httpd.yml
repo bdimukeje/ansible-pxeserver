@@ -1,0 +1,27 @@
+- name: Create Kickstart directory
+  file:
+    path: /var/www/html/ks
+    state: directory
+
+- name: Copy ISO contents to the web root, including hidden files
+  shell: cp -r /mnt/. /var/www/html/
+  args:
+    creates: /var/www/html/.iso_copied_marker
+
+- name: Create Kickstart configuration file
+  template:
+    src: templates/ks.cfg.j2
+    dest: /var/www/html/ks.cfg
+
+- name: Set permissions for web root
+  file:
+    path: /var/www/html
+    state: directory
+    mode: "0755"
+    recurse: true
+
+- name: Enable and start HTTP service
+  systemd:
+    name: httpd
+    state: started
+    enabled: true

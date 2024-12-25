@@ -1,0 +1,2 @@
+link: https://access.redhat.com/downloads/content/479/ver=/rhel---9/9.5/x86_64/product-software
+-Download RHEL 9.5 Binary DVD

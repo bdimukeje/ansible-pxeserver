@@ -1,0 +1,39 @@
+- name: Copy TFTP bootloader files
+  copy:
+    src: "/usr/share/syslinux/{{ item }}"
+    dest: "/var/lib/tftpboot/"
+    remote_src: yes
+  with_items:
+    - pxelinux.0
+    - ldlinux.c32
+    - menu.c32
+    - vesamenu.c32
+  loop_control:
+    label: "{{ item }}"
+
+- name: Ensure TFTP service is installed
+  package:
+    name: tftp-server
+    state: present
+
+- name: Enable and start TFTP service
+  service:
+    name: tftp
+    state: started
+    enabled: yes
+    
+- name: Ensure pxelinux.cfg directory exists
+  file:
+    path: /var/lib/tftpboot/pxelinux.cfg
+    state: directory
+
+- name: Create default PXE boot configuration file
+  copy:
+    dest: /var/lib/tftpboot/pxelinux.cfg/default
+    content: |
+      DEFAULT linux
+      LABEL linux
+          KERNEL /vmlinuz
+          APPEND initrd=initrd.img inst.stage2=http://{{ pxe_server_ip }}/ inst.ks=http://{{ pxe_server_ip }}/ks.cfg
+
+    force: yes

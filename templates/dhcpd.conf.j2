@@ -1,0 +1,13 @@
+option domain-name "{{ domain_name }}";
+option domain-name-servers {{ dns_server }};
+default-lease-time 600;
+max-lease-time 7200;
+authoritative;
+
+# Subnet declaration
+subnet {{ subnet | ipaddr('network') }} netmask {{ subnet | ipaddr('netmask') }} {
+  range {{ dhcp_range_start }} {{ dhcp_range_end }};
+  option routers {{ pxe_server_ip }};
+  next-server {{ pxe_server_ip }};
+  filename "pxelinux.0";
+}

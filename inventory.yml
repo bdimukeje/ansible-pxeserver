@@ -1,0 +1,7 @@
+all:
+  hosts:
+    pxe_server:
+      ansible_host: 192.168.56.111   # Replace with your PXE server's IP
+      ansible_user: root
+      ansible_ssh_private_key_file: ~/.ssh/id_rsa  # Path to your private key
+      domain_name: "pxe.local"       # define domain_name

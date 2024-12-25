@@ -1,0 +1,53 @@
+- name: Configure PXE Server
+  hosts: pxe_server
+  become: true
+  vars:
+    subnet: "192.168.56.0/24"
+    dhcp_range_start: "192.168.56.100"
+    dhcp_range_end: "192.168.56.200"
+    domain_name: "pxe.local"  # Add this line to define domain_name
+    dns_server: "8.8.8.8"  # Google Public DNS or a local DNS server IP
+
+  tasks:
+    - name: Install required packages
+      include_tasks: tasks/install-packages.yml
+    - name: Gather all IPv4 addresses
+      set_fact:
+        all_ipv4_addresses: "{{ ansible_facts['all_ipv4_addresses'] }}"
+
+    - name: Debug all IPv4 addresses
+      debug:
+        msg: "{{ all_ipv4_addresses }}"
+
+    - name: Filter PXE server IP matching the subnet
+      set_fact:
+        pxe_server_ip: >-
+          {{
+            all_ipv4_addresses
+            | select('search', subnet.split('.')[0] + '.' + subnet.split('.')[1] + '.' + subnet.split('.')[2] + '.')
+            | list
+            | first
+            | default(ansible_default_ipv4.address)
+          }}
+
+    - name: Debug selected PXE server IP
+      debug:
+        msg: "Selected PXE server IP: {{ pxe_server_ip }}"
+        
+    - name: Debug retrieved PXE server IP
+      debug:
+        msg: "PXE server IP: {{ pxe_server_ip }}"
+    - name: Configure DHCP server
+      include_tasks: tasks/configure-dhcp.yml
+
+    - name: Configure TFTP server
+      include_tasks: tasks/configure-tftp.yml
+
+    - name: Configure HTTP server
+      include_tasks: tasks/configure-httpd-wpodman.yml
+
+    - name: Configure firewall rules
+      include_tasks: tasks/firewall-config.yml
+
+    - name: Copy PXE boot files
+      include_tasks: tasks/copy-pxe-files.yml

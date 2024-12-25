@@ -1,0 +1,45 @@
+- name: Stop and disable native HTTPD service
+  systemd:
+    name: httpd
+    state: stopped
+    enabled: false
+
+- name: Create Kickstart directory for containerized HTTP server
+  file:
+    path: /var/www/html/ks
+    state: directory
+
+- name: Copy ISO contents to a staging directory
+  shell: cp -r /mnt/. /var/www/html/
+  args:
+    creates: /var/www/html/.iso_copied_marker
+
+- name: Create Kickstart configuration file
+  template:
+    src: templates/ks.cfg.j2
+    dest: /var/www/html/ks.cfg
+
+- name: Pull the latest HTTPD image from Docker Hub
+  containers.podman.podman_image:
+    name: docker.io/library/httpd:latest
+    state: present
+
+- name: Start containerized HTTP server
+  containers.podman.podman_container:
+    name: httpd-server
+    image: docker.io/library/httpd:latest
+    state: started
+    ports:
+      - "80:80"  # Maps port 80 on the host to port 80 in the container
+    volumes:
+      - "/var/www/html:/usr/local/apache2/htdocs:Z"  # Mounts the web root directory into the container
+    restart_policy: always
+
+- name: Ensure the containerized HTTP server is running
+  containers.podman.podman_container_info:
+    name: httpd-server
+  register: container_info
+
+- name: Debug container status
+  debug:
+    var: container_info

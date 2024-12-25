@@ -1,0 +1,9 @@
+- name: Copy PXE boot files
+  copy:
+    src: "{{ item }}"
+    dest: /var/lib/tftpboot/
+    remote_src: yes
+  loop:
+    - /mnt/images/pxeboot/vmlinuz
+    - /mnt/images/pxeboot/initrd.img
+  when: item is defined
